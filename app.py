@@ -1,5 +1,5 @@
 # app.py
-from flask import Flask
+from flask import Flask, render_template
 from pymongo import MongoClient
 from dotenv import load_dotenv
 from webhook_routes import webhook_bp
@@ -15,7 +15,12 @@ db = client["webhooks_db"]
 collection = db["events"]
 
 app = Flask(__name__)
+
 app.config["DB_COLLECTION"] = collection
+
+@app.route("/")
+def index():
+    return render_template("index.html")
 
 app.register_blueprint(webhook_bp)
 

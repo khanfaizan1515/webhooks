@@ -1,20 +1,93 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Webhook Events</title>
-  </head>
-  <body>
-    <h1>Events</h1>
-    <div id="events"></div>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>GitHub Events Dashboard</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 20px; background: #f2f2f2;">
 
-    <script>
-      setInterval(() => {
-        fetch('/events')
-          .then(res => res.json())
-          .then(data => {
-            document.getElementById('events').innerHTML = JSON.stringify(data, null, 2);
+  <h1 style="text-align: center; color: #333; margin-bottom: 30px;">GitHub Events Dashboard</h1>
+
+  <div id="eventsContainer" style="
+    max-width: 900px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  ">
+    <p style="grid-column: 1 / -1; text-align: center;">Loading events...</p>
+  </div>
+
+  <script>
+    async function loadEvents() {
+      try {
+        const response = await fetch('/events');
+        const events = await response.json();
+
+        const container = document.getElementById('eventsContainer');
+        container.innerHTML = '';
+
+        if (events.length === 0) {
+          container.innerHTML = '<p style="grid-column: 1 / -1; text-align:center;">No events found.</p>';
+          return;
+        }
+
+        events.forEach(event => {
+          let title = '';
+          let details = '';
+          let color = '';
+
+          if (event.event_type === 'push') {
+            title = 'Push Event';
+            details = `<strong>${event.author || '-'}</strong> pushed to <strong>${event.to_branch || '-'}</strong> on <em>${event.timestamp}</em>`;
+            color = '#d1e7dd';
+          } else if (event.event_type === 'pull_request') {
+            title = 'Pull Request Event';
+            details = `<strong>${event.author || '-'}</strong> submitted a pull request from <strong>${event.from_branch || '-'}</strong> to <strong>${event.to_branch || '-'}</strong> on <em>${event.timestamp}</em>`;
+            color = '#cff4fc';
+          } else if (event.event_type === 'merge') {
+            title = 'Merge Event';
+            details = `<strong>${event.author || '-'}</strong> merged branch <strong>${event.from_branch || '-'}</strong> to <strong>${event.to_branch || '-'}</strong> on <em>${event.timestamp}</em>`;
+            color = '#fde2e2';
+          } else {
+            title = 'Unknown Event';
+            details = `Unknown event type: ${event.event_type}`;
+            color = '#f8d7da';
+          }
+
+          const card = document.createElement('div');
+          card.style.background = color;
+          card.style.borderRadius = '8px';
+          card.style.padding = '15px';
+          card.style.boxShadow = '0 0 8px rgba(0,0,0,0.1)';
+          card.style.transition = 'transform 0.2s';
+          card.style.cursor = 'pointer';
+
+          card.innerHTML = `
+            <h3 style="margin-top: 0; margin-bottom: 10px; color: #333;">${title}</h3>
+            <p style="margin: 0; color: #555;">${details}</p>
+          `;
+
+          card.addEventListener('mouseenter', () => {
+            card.style.transform = 'scale(1.03)';
           });
-      }, 15000);
-    </script>
-  </body>
+          card.addEventListener('mouseleave', () => {
+            card.style.transform = 'scale(1)';
+          });
+
+          container.appendChild(card);
+        });
+
+      } catch (error) {
+        console.error(error);
+        document.getElementById('eventsContainer').innerHTML =
+          '<p style="color:red; grid-column: 1 / -1; text-align:center;">Failed to load events.</p>';
+      }
+    }
+
+    loadEvents();
+    setInterval(loadEvents, 15000);
+  </script>
+
+</body>
 </html>

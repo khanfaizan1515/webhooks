@@ -11,12 +11,18 @@ def map_github_event(event_type, data):
     }
 
     if event_type == "push":
-        event_doc["author"] = data["pusher"]["name"]
-        event_doc["to_branch"] = data["ref"].split("/")[-1]
+        event_doc["author"] = data.get("pusher", {}).get("name")
+        event_doc["to_branch"] = data.get("ref", "").split("/")[-1]
 
     elif event_type == "pull_request":
-        event_doc["author"] = data["pull_request"]["user"]["login"]
-        event_doc["from_branch"] = data["pull_request"]["head"]["ref"]
-        event_doc["to_branch"] = data["pull_request"]["base"]["ref"]
+        pr = data.get("pull_request", {})
+        event_doc["author"] = pr.get("user", {}).get("login")
+        event_doc["from_branch"] = pr.get("head", {}).get("ref")
+        event_doc["to_branch"] = pr.get("base", {}).get("ref")
+
+    elif event_type == "merge":
+        event_doc["author"] = data.get("sender", {}).get("login")
+        event_doc["from_branch"] = data.get("pull_request", {}).get("head", {}).get("ref")
+        event_doc["to_branch"] = data.get("pull_request", {}).get("base", {}).get("ref")
 
     return event_doc
