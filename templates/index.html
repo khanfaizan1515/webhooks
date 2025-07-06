@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Webhook Events</title>
+  </head>
+  <body>
+    <h1>Events</h1>
+    <div id="events"></div>
+
+    <script>
+      setInterval(() => {
+        fetch('/events')
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById('events').innerHTML = JSON.stringify(data, null, 2);
+          });
+      }, 15000);
+    </script>
+  </body>
+</html>
